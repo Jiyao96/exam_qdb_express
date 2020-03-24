@@ -28,6 +28,7 @@ app.get('/question/topics/:topicId',db.getQuestionByTopic)
 app.get('/question/term/:term', db.getQuestionByTerm)
 app.get('/question/course/:course', db.getQuestionByCourse)
 //utility queries
+app.get('/exam/statistics/:questionId', db.getExamStatistics)
 
 //app.post('/questions',db.createQuestion)
 //app.put('/questions/:id',db.updateQuestion)

@@ -88,6 +88,18 @@ const getQuestionByCourse = (request, response) => {
     })
 }
 
+//get exam statistics by question id
+const getExamStatistics = (request, response) => {
+    const questionId = parseInt(request.params.questionId)
+    //console.log(`ID: ${id}`)
+    pool.query('SELECT DISTINCT e.avg,e.min,e.max,e.std_dev FROM questions q,exams e WHERE q.id = $1 and q.exam_id=e.id', [questionId], (error, results) => {
+        if (error){
+            throw error;
+        }
+        response.status(200).json(results.rows);
+    })
+}
+
 /*
 
 const createQuestion = (request, response) => {
@@ -137,6 +149,9 @@ module.exports = {
     getQuestionByTopic,
     getQuestionByTerm,
     getQuestionByCourse,
+    getExamStatistics,
+    //more general search...
+    
     //add new questions
     
     //update questions
