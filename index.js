@@ -28,9 +28,22 @@ app.get('/question/topics/:topicId',db.getQuestionByTopic)
 app.get('/question/term/:term', db.getQuestionByTerm)
 app.get('/question/course/:course', db.getQuestionByCourse)
 //utility queries
+app.get('/exam', db.getExam)
+app.get('/course',db.getCourse)
+app.get('/topic',db.getTopic)
 app.get('/exam/statistics/:questionId', db.getExamStatistics)
-
-//app.post('/questions',db.createQuestion)
+//search bar
+//...
+//post queries
+app.post('/question',db.createQuestion)
+app.post('/exam',db.createExam)
+app.post('/course',db.createCourse)
+app.post('/topic',db.createTopic)
+//put queries
+app.put('/question/:id',db.updateQuestion)
+app.put('/exam/:id',db.updateExam)
+app.put('/course/:id',db.updateCourse)
+app.put('/topic/:id',db.updateTopic)
 //app.put('/questions/:id',db.updateQuestion)
 //app.delete('/questions/:id', db.deleteQuestion)
 

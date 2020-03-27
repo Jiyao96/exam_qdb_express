@@ -100,18 +100,124 @@ const getExamStatistics = (request, response) => {
     })
 }
 
-/*
+//search bar utility
+//...
 
-const createQuestion = (request, response) => {
-    const {link, year} = request.body
-    pool.query('INSERT INTO questions(link, year) VALUES ($1, $2)', [link, year], (error, result) => {
-        if (error){
+const getExam = (request, response) => {
+    pool.query('SELECT * FROM exams ORDER BY id ASC', (error, results) =>{
+        if (error) {
             throw error
         }
-        response.status(201).send(`Question Added with ID: ${result.Id}`)
+        response.status(200).json(results.rows)
     })
 }
 
+const getCourse = (request, response) => {
+    pool.query('SELECT * FROM courses ORDER BY id ASC', (error, results) =>{
+        if (error) {
+            throw error
+        }
+        response.status(200).json(results.rows)
+    })
+}
+
+const getTopic = (request, response) => {
+    pool.query('SELECT * FROM topics ORDER BY id ASC', (error, results) =>{
+        if (error) {
+            throw error
+        }
+        response.status(200).json(results.rows)
+    })
+}
+
+//post queries
+const createQuestion = (request, response) => {
+    const {topic_id, exam_id, question_num, url, avg, std_dev, correlation} = request.body
+    pool.query('INSERT INTO questions(topic_id, exam_id, question_num, url, avg, std_dev, correlation) VALUES ($1, $2, $3, $4, $5, $6, $7)', [topic_id, exam_id, question_num, url, avg, std_dev, correlation], (error, result) => {
+        if (error){
+            throw error
+        }
+        response.status(201).send(`Question Added.`)
+    })
+}
+
+const createExam = (request, response) => {
+    const {exam_name, description, course_id, year, term, avg, min, max, std_dev} = request.body
+    pool.query('INSERT INTO exams (exam_name, description, course_id, year, term, avg, min, max, std_dev) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',[exam_name,description,course_id,year,term,avg,min,max,std_dev],(error,result)=>{
+        if(error){
+            throw error
+        }
+        response.status(201).send(`Exam Added.`)
+    })
+}
+
+const createTopic = (request, response) => {
+    const {name} = request.body
+    pool.query('INSERT INTO topics (name) VALUES ($1)', [name], (error, result) => {
+        if (error){
+            throw error
+        }
+        response.status(201).send(`Topic Added.`)
+    })
+}
+
+const createCourse = (request, response) => {
+    const {name, instructors} = request.body
+    pool.query('INSERT INTO courses (name, instructors) VALUES ($1, $2)', [name, instructors], (error, result) => {
+            if (error){
+               throw error
+            }
+            response.status(201).send(`Course Added.`)
+    })
+}
+
+//put queries
+const updateQuestion = (request, response) => {
+    const id = parseInt(request.params.id)
+    const {topic_id, exam_id, question_num, url, avg, std_dev, correlation} = request.body
+    pool.query('UPDATE questions SET topic_id=$1, exam_id=$2, question_num=$3, url=$4, avg=$5, std_dev=$6, correlation=$7 WHERE id=$8', [topic_id, exam_id, question_num, url, avg, std_dev, correlation, id], (error, result) => {
+            if (error){
+               throw error
+            }
+            response.status(201).send(`Question modified.`)
+    })
+}
+
+const updateExam = (request, response) => {
+    const id = parseInt(request.params.id)
+    const {exam_name, description, course_id, year, term, avg, min, max, std_dev} = request.body
+    pool.query('UPDATE exams SET exam_name=$1, description=$2, course_id=$3, year=$4, term=$5, avg=$6, min=$7, max=$8, std_dev=$9 WHERE id=$10',[exam_name,description,course_id,year,term,avg,min,max,std_dev,id],(error,result)=>{
+            if(error){
+               throw error
+            }
+            response.status(200).send(`Exam modified.`)
+    })
+}
+
+const updateTopic = (request, response) => {
+    const id = parseInt(request.params.id)
+    const {name} = request.body
+    pool.query('UPDATE topics SET name=$1 WHERE id=$2', [name,id], (error, result) => {
+            if (error){
+               throw error
+            }
+            response.status(200).send(`Topic modified.`)
+    })
+}
+
+const updateCourse = (request, response) => {
+    const id = parseInt(request.params.id)
+    const {name, instructors} = request.body
+    pool.query('UPDATE courses SET name=$1, instructors=$2 WHERE id=$3', [name, instructors,id], (error, result) => {
+            if (error){
+               throw error
+            }
+            response.status(200).send(`Course modified.`)
+    })
+}
+
+
+/*
 const updateQuestion = (request, response) => {
     const id = parseInt(request.params.id)
     const { link, year } = request.body
@@ -149,11 +255,20 @@ module.exports = {
     getQuestionByTopic,
     getQuestionByTerm,
     getQuestionByCourse,
+    //utilities
+    getExam,
+    getCourse,
+    getTopic,
     getExamStatistics,
-    //more general search...
-    
-    //add new questions
-    
+    //insert into database
+    createQuestion,
+    createExam,
+    createCourse,
+    createTopic,
     //update questions
+    updateQuestion,
+    updateExam,
+    updateCourse,
+    updateTopic,
     //delete questions
 }
