@@ -20,6 +20,7 @@ app.get('/', (request, response) => {
     response.json({info: 'Node.js and postgres.js'})
 })
 //question queries
+app.get('/all', db.getAllQuetionsFilter)
 app.get('/question', db.getQuestion)
 app.get('/question/:id', db.getQuestionById)
 app.get('/question/year/:minYear/:maxYear', db.getQuestionByYear)

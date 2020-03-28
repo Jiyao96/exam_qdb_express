@@ -215,7 +215,23 @@ const updateCourse = (request, response) => {
             response.status(200).send(`Course modified.`)
     })
 }
-
+// Dynamical filter
+const getAllQuetionsFilter = (request, response) => {
+    const topicId = parseInt(request.query.topicId)
+    const minYear = parseInt(request.query.minYear)
+    const maxYear = parseInt(request.query.maxYear)
+    const topicQuery = topicId === 0 ? "" : " and " + topicId + "=ANY(topic_id)"
+    const yearQuery = " and e.year>=" + minYear + " and e.year<=" + maxYear
+    const termQuery = request.query.semester === "no" ? "" : " and e.term=" + "'" + request.query.semester + "'"
+    const courseQuery = request.query.course === "no" ? "" : " and e.course_id=c.id and c.name=" + "'" + request.query.course + "'"
+    const mainQuery = "SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation FROM questions q, exams e, courses c WHERE q.exam_id=e.id" + topicQuery+ yearQuery + termQuery + courseQuery
+    pool.query(mainQuery, (error, results) => {
+      if (error) {
+          throw error
+      }
+      response.status(200).json(results.rows)
+  })
+}
 
 /*
 const updateQuestion = (request, response) => {
@@ -270,5 +286,6 @@ module.exports = {
     updateExam,
     updateCourse,
     updateTopic,
+    getAllQuetionsFilter,
     //delete questions
 }
