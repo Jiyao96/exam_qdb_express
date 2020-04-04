@@ -9,7 +9,7 @@ const pool = new Pool({
 
 //get all questions
 const getQuestion = (request, response) => {
-    pool.query('SELECT id,question_num,url,avg,std_dev,correlation FROM questions ORDER BY id ASC', (error, results) =>{
+    pool.query('SELECT id,question_num,url,avg,std_dev,correlation,page_num,description FROM questions ORDER BY id ASC', (error, results) =>{
         if (error) {
         throw error
     }
@@ -21,7 +21,7 @@ const getQuestion = (request, response) => {
 const getQuestionById = (request, response) => {
     const id = parseInt(request.params.id)
     //console.log(`ID: ${id}`)
-    pool.query('SELECT id,question_num,url,avg,std_dev,correlation FROM questions WHERE id = $1', [id], (error, results) => {
+    pool.query('SELECT id,question_num,url,avg,std_dev,correlation,page_num,description FROM questions WHERE id = $1 ORDER BY id ASC', [id], (error, results) => {
         if (error){
             throw error;
         }
@@ -35,7 +35,7 @@ const getQuestionByYear = (request, response) => {
     const maxYear = parseInt(request.params.maxYear)
     //console.log(`minYear: ${minYear}`)
     //console.log(`maxYear: ${maxYear}`)
-    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation FROM questions q, exams e WHERE q.exam_id=e.id and e.year>=$1 and e.year<=$2',[minYear,maxYear],(error,results)=> {
+    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation,q.page_num,q.description FROM questions q, exams e WHERE q.exam_id=e.id and e.year>=$1 and e.year<=$2 ORDER BY q.id ASC',[minYear,maxYear],(error,results)=> {
             if (error){
                throw error;
             }
@@ -47,7 +47,7 @@ const getQuestionByYear = (request, response) => {
 const getQuestionByAvg = (request, response) => {
     const minAvg = parseInt(request.params.minAvg)
     const maxAvg = parseInt(request.params.maxAvg)
-    pool.query('SELECT id,question_num,url,avg,std_dev,correlation FROM questions WHERE Avg >= $1 and Avg<= $2',[minAvg,maxAvg],(error,results)=> {
+    pool.query('SELECT id,question_num,url,avg,std_dev,correlation,page_num,description FROM questions WHERE Avg >= $1 and Avg<= $2 ORDER BY id ASC',[minAvg,maxAvg],(error,results)=> {
             if (error){
                throw error;
             }
@@ -58,7 +58,7 @@ const getQuestionByAvg = (request, response) => {
 //get questions by topics
 const getQuestionByTopic = (request, response) => {
     const topicId = parseInt(request.params.topicId)
-    pool.query('SELECT id,question_num,url,avg,std_dev,correlation FROM questions WHERE $1 = ANY(topic_id)', [topicId], (error, results) => {
+    pool.query('SELECT id,question_num,url,avg,std_dev,correlation,page_num,description FROM questions WHERE $1 = ANY(topic_id) ORDER BY id ASC', [topicId], (error, results) => {
         if (error){
             throw error;
         }
@@ -69,7 +69,7 @@ const getQuestionByTopic = (request, response) => {
 //get questions by term
 const getQuestionByTerm = (request, response) => {
     const term = request.params.term
-    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation FROM questions q, exams e WHERE q.exam_id=e.id and e.term=$1', [term], (error, results) => {
+    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation,q.page_num,q.description FROM questions q, exams e WHERE q.exam_id=e.id and e.term=$1 ORDER BY q.id ASC', [term], (error, results) => {
         if (error){
             throw error;
         }
@@ -80,7 +80,7 @@ const getQuestionByTerm = (request, response) => {
 //get questions by course
 const getQuestionByCourse = (request, response) => {
     const course = request.params.course
-    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation FROM questions q, exams e, courses c WHERE q.exam_id=e.id and e.course_id=c.id and c.name=$1', [course], (error, results) => {
+    pool.query('SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation,q.page_num,q.description FROM questions q, exams e, courses c WHERE q.exam_id=e.id and e.course_id=c.id and c.name=$1 ORDER BY q.id ASC', [course], (error, results) => {
         if (error){
                throw error;
         }
@@ -99,9 +99,6 @@ const getExamStatistics = (request, response) => {
         response.status(200).json(results.rows);
     })
 }
-
-//search bar utility
-//...
 
 const getExam = (request, response) => {
     pool.query('SELECT * FROM exams ORDER BY id ASC', (error, results) =>{
@@ -130,25 +127,49 @@ const getTopic = (request, response) => {
     })
 }
 
+
 //post queries
 const createQuestion = (request, response) => {
-    const {topic_id, exam_id, question_num, url, avg, std_dev, correlation} = request.body
-    pool.query('INSERT INTO questions(topic_id, exam_id, question_num, url, avg, std_dev, correlation) VALUES ($1, $2, $3, $4, $5, $6, $7)', [topic_id, exam_id, question_num, url, avg, std_dev, correlation], (error, result) => {
-        if (error){
+    const {topic_name, exam_name, question_num, url, avg, std_dev, correlation, page_num, description} = request.body
+    //parse exam id
+    pool.query('SELECT id FROM exams WHERE exam_name=$1',[exam_name],(error,result)=>{
+        if(error){
             throw error
         }
-        response.status(201).send(`Question Added.`)
+        if(result.rowCount==0){
+            response.status(201).send('Exam not in database, check input.')
+            return
+        }
+        exam_id=parseInt(result.rows[0].id)
+        pool.query('INSERT INTO questions(topic_id, exam_id, question_num, url, avg, std_dev, correlation,page_num,description) VALUES ($1, $2, $3, $4, $5, $6, $7,$8,$9)', [topic_id, exam_id, question_num, url, avg, std_dev, correlation,page_num,description], (error, result) => {
+            if (error){
+                throw error
+            }
+            response.status(201).send('Question Added.')
+        })
     })
 }
 
 const createExam = (request, response) => {
-    const {exam_name, description, course_id, year, term, avg, min, max, std_dev} = request.body
-    pool.query('INSERT INTO exams (exam_name, description, course_id, year, term, avg, min, max, std_dev) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',[exam_name,description,course_id,year,term,avg,min,max,std_dev],(error,result)=>{
+    const {exam_name, description, course_name, year, term, avg, min, max, std_dev} = request.body
+    //parse course id
+    pool.query('SELECT id FROM courses WHERE name=$1',[course_name],(error,result)=>{
         if(error){
             throw error
         }
-        response.status(201).send(`Exam Added.`)
+        if(result.rowCount==0){
+            response.status(201).send('Course not in database.')
+            return
+        }
+        course_id=parseInt(result.rows[0].id)
+        pool.query('INSERT INTO exams (exam_name, description, course_id, year, term, avg, min, max, std_dev) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',[exam_name,description,course_id,year,term,avg,min,max,std_dev],(error,result)=>{
+            if(error){
+                throw error
+            }
+            response.status(201).send('Exam Added.')
+        })
     })
+    
 }
 
 const createTopic = (request, response) => {
@@ -157,7 +178,7 @@ const createTopic = (request, response) => {
         if (error){
             throw error
         }
-        response.status(201).send(`Topic Added.`)
+        response.status(201).send('Topic Added.')
     })
 }
 
@@ -167,19 +188,19 @@ const createCourse = (request, response) => {
             if (error){
                throw error
             }
-            response.status(201).send(`Course Added.`)
+            response.status(201).send('Course Added.')
     })
 }
 
 //put queries
 const updateQuestion = (request, response) => {
     const id = parseInt(request.params.id)
-    const {topic_id, exam_id, question_num, url, avg, std_dev, correlation} = request.body
-    pool.query('UPDATE questions SET topic_id=$1, exam_id=$2, question_num=$3, url=$4, avg=$5, std_dev=$6, correlation=$7 WHERE id=$8', [topic_id, exam_id, question_num, url, avg, std_dev, correlation, id], (error, result) => {
+    const {topic_id, exam_id, question_num, url, avg, std_dev, correlation, page_num, description} = request.body
+    pool.query('UPDATE questions SET topic_id=$1, exam_id=$2, question_num=$3, url=$4, avg=$5, std_dev=$6, correlation=$7, page_num=$8, description=$9 WHERE id=$10', [topic_id, exam_id, question_num, url, avg, std_dev, correlation, page_num, description, id], (error, result) => {
             if (error){
                throw error
             }
-            response.status(201).send(`Question modified.`)
+            response.status(201).send('Question modified.')
     })
 }
 
@@ -190,7 +211,7 @@ const updateExam = (request, response) => {
             if(error){
                throw error
             }
-            response.status(200).send(`Exam modified.`)
+            response.status(200).send('Exam modified.')
     })
 }
 
@@ -201,7 +222,7 @@ const updateTopic = (request, response) => {
             if (error){
                throw error
             }
-            response.status(200).send(`Topic modified.`)
+            response.status(200).send('Topic modified.')
     })
 }
 
@@ -212,19 +233,19 @@ const updateCourse = (request, response) => {
             if (error){
                throw error
             }
-            response.status(200).send(`Course modified.`)
+            response.status(200).send('Course modified.')
     })
 }
 // Dynamical filter
 const getAllQuetionsFilter = (request, response) => {
-    const topicId = parseInt(request.query.topicId)
     const minYear = parseInt(request.query.minYear)
     const maxYear = parseInt(request.query.maxYear)
-    const topicQuery = topicId === 0 ? "" : " and " + topicId + "=ANY(topic_id)"
+    const topicQuery = request.query.topic_name === "no" ? "" : " and t.id=ANY(q.topic_id) and t.name="+ "'" +request.query.topic_name + "'"
     const yearQuery = " and e.year>=" + minYear + " and e.year<=" + maxYear
-    const termQuery = request.query.semester === "no" ? "" : " and e.term=" + "'" + request.query.semester + "'"
-    const courseQuery = request.query.course === "no" ? "" : " and e.course_id=c.id and c.name=" + "'" + request.query.course + "'"
-    const mainQuery = "SELECT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation FROM questions q, exams e, courses c WHERE q.exam_id=e.id" + topicQuery+ yearQuery + termQuery + courseQuery
+    const termQuery = request.query.term === "no" ? "" : " and e.term=" + "'" + request.query.term + "'"
+    const courseQuery = request.query.course_name === "no" ? "" : " and e.course_id=c.id and c.name=" + "'" + request.query.course_name + "'"
+    const mainQuery = "SELECT DISTINCT q.id,q.question_num,q.url,q.avg,q.std_dev,q.correlation,q.page_num,q.description FROM questions q, exams e, courses c, topics t WHERE q.exam_id=e.id" + topicQuery+ yearQuery + termQuery + courseQuery + " ORDER BY q.id ASC"
+    console.log(mainQuery)
     pool.query(mainQuery, (error, results) => {
       if (error) {
           throw error
@@ -232,35 +253,6 @@ const getAllQuetionsFilter = (request, response) => {
       response.status(200).json(results.rows)
   })
 }
-
-/*
-const updateQuestion = (request, response) => {
-    const id = parseInt(request.params.id)
-    const { link, year } = request.body
-  
-    pool.query(
-      'UPDATE questions SET link = $1, year = $2 WHERE id = $3',
-      [link, year, id],
-      (error, results) => {
-        if (error) {
-          throw error
-        }
-        response.status(200).send(`Question modified with ID: ${id}`)
-      }
-    )
-  }
-
-const deleteQuestion = (request, response) => {
-    const id = request.params.id
-
-    pool.query('DELETE FROM questions WHERE id = $1', [id], (error, result) => {
-        if (error){
-            throw error
-        }
-        response.status(200).send(`Question deleted with ID: ${id}`)
-    })
-}
-*/
 
 module.exports = {
     //inspect questions

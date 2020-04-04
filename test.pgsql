@@ -109,7 +109,9 @@ CREATE TABLE public.questions (
     url text,
     avg double precision,
     std_dev double precision,
-    correlation double precision
+    correlation double precision,
+    page_num integer,
+    description text
 );
 
 
@@ -205,6 +207,8 @@ ALTER TABLE ONLY public.topics ALTER COLUMN id SET DEFAULT nextval('public.topic
 
 COPY public.courses (id, name, instructors) FROM stdin;
 1	PHYS101	1prof, 2prof
+2	course_insert_test	inst1,inst2
+3	course_update_test	modified1, modified2
 \.
 
 
@@ -214,6 +218,8 @@ COPY public.courses (id, name, instructors) FROM stdin;
 
 COPY public.exams (id, exam_name, description, course_id, year, term, avg, min, max, std_dev) FROM stdin;
 1	PHYS101midterm	testing	1	2020	SPRING	50	20	90	30
+3	insert_exam_test	testing insert	2	2019	SUMMER1	40	0	100	66.66
+2	update_testing	update test	1	2018	SUMMER2	22	5	95	10
 \.
 
 
@@ -221,10 +227,12 @@ COPY public.exams (id, exam_name, description, course_id, year, term, avg, min, 
 -- Data for Name: questions; Type: TABLE DATA; Schema: public; Owner: xy
 --
 
-COPY public.questions (id, topic_id, exam_id, question_num, url, avg, std_dev, correlation) FROM stdin;
-1	{1,3}	1	7	no url yet	50.5	16.78	0.9
-2	{1,3}	1	6	no url yet	40.5	17.89	-0.1
-3	{1,3}	1	5	no url yet	90	17.89	0.1
+COPY public.questions (id, topic_id, exam_id, question_num, url, avg, std_dev, correlation, page_num, description) FROM stdin;
+5	{1,2,3,4,5}	2	2	update_testing	90	4.4	0.9	1	testing_description
+3	{1,3}	1	5	no url yet	90	17.89	0.1	1	testing_description
+2	{1,3}	1	6	no url yet	40.5	17.89	-0.1	1	testing_description
+1	{1,3}	1	7	no url yet	50.5	16.78	0.9	1	testing_description
+4	{1,4}	1	13	testing_update_data	44	77	0.4	2	testing_update
 \.
 
 
@@ -236,6 +244,8 @@ COPY public.topics (id, name) FROM stdin;
 1	1topic
 2	2topic
 3	3topic
+4	topic_insert_test
+5	topic_update_test
 \.
 
 
@@ -243,28 +253,28 @@ COPY public.topics (id, name) FROM stdin;
 -- Name: courses_id_seq; Type: SEQUENCE SET; Schema: public; Owner: xy
 --
 
-SELECT pg_catalog.setval('public.courses_id_seq', 1, true);
+SELECT pg_catalog.setval('public.courses_id_seq', 3, true);
 
 
 --
 -- Name: exams_id_seq; Type: SEQUENCE SET; Schema: public; Owner: xy
 --
 
-SELECT pg_catalog.setval('public.exams_id_seq', 1, true);
+SELECT pg_catalog.setval('public.exams_id_seq', 3, true);
 
 
 --
 -- Name: questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: xy
 --
 
-SELECT pg_catalog.setval('public.questions_id_seq', 3, true);
+SELECT pg_catalog.setval('public.questions_id_seq', 5, true);
 
 
 --
 -- Name: topics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: xy
 --
 
-SELECT pg_catalog.setval('public.topics_id_seq', 3, true);
+SELECT pg_catalog.setval('public.topics_id_seq', 5, true);
 
 
 --

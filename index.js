@@ -33,8 +33,6 @@ app.get('/exam', db.getExam)
 app.get('/course',db.getCourse)
 app.get('/topic',db.getTopic)
 app.get('/exam/statistics/:questionId', db.getExamStatistics)
-//search bar
-//...
 //post queries
 app.post('/question',db.createQuestion)
 app.post('/exam',db.createExam)
@@ -45,7 +43,6 @@ app.put('/question/:id',db.updateQuestion)
 app.put('/exam/:id',db.updateExam)
 app.put('/course/:id',db.updateCourse)
 app.put('/topic/:id',db.updateTopic)
-//app.put('/questions/:id',db.updateQuestion)
 //app.delete('/questions/:id', db.deleteQuestion)
 
 app.listen(port, () => {
